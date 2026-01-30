@@ -40,7 +40,6 @@
 
     <div class="viewport">
         <div class="slider-container" id="slider">
-            
             <section class="page">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-black text-red-500">支出預算</h2>
@@ -49,15 +48,11 @@
                 <div id="budgetCalendar" class="calendar-grid dark-card mb-4"></div>
                 <div class="dark-card p-5 space-y-4 mb-6">
                     <input type="date" id="expDate" class="w-full neon-input p-3 text-sm">
-                    <div class="flex gap-2">
-                        <input type="text" id="expTitle" placeholder="支出項目" class="flex-1 neon-input p-3 text-sm">
-                        <input type="number" id="expAmount" placeholder="金額" class="w-24 neon-input p-3 text-sm">
-                    </div>
-                    <button onclick="addData('expenses')" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-red-900/20">新增紀錄</button>
+                    <div class="flex gap-2"><input type="text" id="expTitle" placeholder="項目" class="flex-1 neon-input p-3 text-sm"><input type="number" id="expAmount" placeholder="金額" class="w-24 neon-input p-3 text-sm"></div>
+                    <button onclick="addData('expenses')" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold">新增紀錄</button>
                 </div>
                 <div id="expenseList" class="space-y-3 pb-20"></div>
             </section>
-
             <section class="page">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-black text-green-400">收入來源</h2>
@@ -66,33 +61,20 @@
                 <div id="incomeCalendar" class="calendar-grid dark-card mb-4"></div>
                 <div class="dark-card p-5 space-y-4 mb-6">
                     <input type="date" id="incDate" class="w-full neon-input p-3 text-sm">
-                    <div class="flex gap-2">
-                        <input type="text" id="incTitle" placeholder="來源說明" class="flex-1 neon-input p-3 text-sm">
-                        <input type="number" id="incAmount" placeholder="金額" class="w-24 neon-input p-3 text-sm">
-                    </div>
-                    <button onclick="addData('incomes')" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold active:scale-95 transition shadow-lg shadow-green-900/20">新增收入</button>
+                    <div class="flex gap-2"><input type="text" id="incTitle" placeholder="來源" class="flex-1 neon-input p-3 text-sm"><input type="number" id="incAmount" placeholder="金額" class="w-24 neon-input p-3 text-sm"></div>
+                    <button onclick="addData('incomes')" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold">新增收入</button>
                 </div>
                 <div id="incomeList" class="space-y-3 pb-20"></div>
             </section>
-
             <section class="page">
                 <h2 class="text-xl font-black mb-6 text-blue-400">帳期數據匯整</h2>
                 <div class="dark-card p-8 flex flex-col items-center mb-6">
                     <div style="width: 180px; height: 180px;"><canvas id="budgetChart"></canvas></div>
-                    <div class="mt-6 text-center">
-                        <p class="text-gray-500 text-[10px] mb-1 font-bold uppercase tracking-widest">本期預估結餘</p>
-                        <p id="balanceText" class="text-3xl font-black text-white">$0</p>
-                    </div>
+                    <div class="mt-6 text-center"><p class="text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-widest">目前帳期結餘</p><p id="balanceText" class="text-3xl font-black text-white">$0</p></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="dark-card p-5 border-l-2 border-green-500/50">
-                        <p class="text-[9px] text-green-400 font-bold mb-1">TOTAL INCOME</p>
-                        <p id="totalIncText" class="text-xl font-black">$0</p>
-                    </div>
-                    <div class="dark-card p-5 border-l-2 border-red-500/50">
-                        <p class="text-[9px] text-red-400 font-bold mb-1">TOTAL EXPENSE</p>
-                        <p id="totalExpText" class="text-xl font-black">$0</p>
-                    </div>
+                    <div class="dark-card p-5 border-l-2 border-green-500/50"><p class="text-[9px] text-green-400 font-bold mb-1 uppercase">Income</p><p id="totalIncText" class="text-xl font-black">$0</p></div>
+                    <div class="dark-card p-5 border-l-2 border-red-500/50"><p class="text-[9px] text-red-400 font-bold mb-1 uppercase">Expense</p><p id="totalExpText" class="text-xl font-black">$0</p></div>
                 </div>
             </section>
         </div>
@@ -108,11 +90,9 @@
         // --- 請在此填入你的 Supabase 資訊 ---
         const SB_URL = "https://apwiglemrzpamtltcrzp.supabase.co";
         const SB_KEY = "sb_publishable_0mLcvlpjNoquYLhEUO54OA_8pSn5m7R";
-        const supabase = bootstrapSupabase();
 
-        function bootstrapSupabase() {
-            return supabase.createClient(SB_URL, SB_KEY);
-        }
+        // 解決命名衝突：將實例化物件改名為 sbClient
+        const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
         let db_local = { incomes: [], expenses: [] };
         let chart = null;
@@ -122,7 +102,6 @@
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
-        // 核心週期邏輯：判定日期屬於哪個帳期
         function getPeriod(dateStr) {
             const d = new Date(dateStr);
             let y = d.getFullYear(), m = d.getMonth() + 1;
@@ -133,11 +112,13 @@
         let viewingMonth = getPeriod(todayStr);
 
         async function fetchAll() {
-            const { data: exp } = await supabase.from('expenses').select('*');
-            const { data: inc } = await supabase.from('incomes').select('*');
-            db_local.expenses = exp || [];
-            db_local.incomes = inc || [];
-            renderAll();
+            try {
+                const { data: exp } = await sbClient.from('expenses').select('*');
+                const { data: inc } = await sbClient.from('incomes').select('*');
+                db_local.expenses = exp || [];
+                db_local.incomes = inc || [];
+                renderAll();
+            } catch (e) { console.error("Fetch Error:", e); }
         }
 
         async function addData(table) {
@@ -148,8 +129,7 @@
                 amount: parseFloat(document.getElementById(prefix+'Amount').value) || 0
             };
             if (!payload.date || !payload.title || payload.amount <= 0) return alert("填寫不完整");
-            
-            await supabase.from(table).insert([payload]);
+            await sbClient.from(table).insert([payload]);
             document.getElementById(prefix+'Title').value = '';
             document.getElementById(prefix+'Amount').value = '';
             fetchAll();
@@ -157,7 +137,7 @@
 
         async function deleteData(id, table) {
             if (!confirm("確定刪除？")) return;
-            await supabase.from(table).delete().eq('id', id);
+            await sbClient.from(table).delete().eq('id', id);
             fetchAll();
         }
 
@@ -170,37 +150,24 @@
             document.getElementById('resetBtn1').classList.toggle('hidden', !selectedDate);
             document.getElementById('resetBtn2').classList.toggle('hidden', !selectedDate);
 
-            // 1. 日曆與點擊過濾邏輯
             const drawCal = (id, items, color) => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 1; i <= 31; i++) {
                     const dStr = `${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     const hasData = items.some(item => item.date === dStr && getPeriod(item.date) === viewingMonth);
-                    el.innerHTML += `
-                        <div class="calendar-day ${selectedDate===dStr?'selected-day':''}" 
-                             onclick="selectedDate=(selectedDate==='${dStr}')?null:'${dStr}';renderAll()">
-                            ${i}${hasData?`<div class="dot" style="background:${color}"></div>`:''}
-                        </div>`;
+                    el.innerHTML += `<div class="calendar-day ${selectedDate===dStr?'selected-day':''}" onclick="selectedDate=(selectedDate==='${dStr}')?null:'${dStr}';renderAll()">${i}${hasData?`<div class="dot" style="background:${color}"></div>`:''}</div>`;
                 }
             };
             drawCal('budgetCalendar', db_local.expenses, '#ef4444');
             drawCal('incomeCalendar', db_local.incomes, '#22c55e');
 
-            // 2. 列表篩選
             const drawList = (id, items, table, color) => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 let filtered = items.filter(i => getPeriod(i.date) === viewingMonth);
                 if (selectedDate) filtered = filtered.filter(i => i.date === selectedDate);
-
-                if (filtered.length === 0) { el.innerHTML = `<p class="text-center text-gray-700 text-[10px] mt-10">NO RECORDS FOUND</p>`; return; }
-
+                if (filtered.length === 0) { el.innerHTML = `<p class="text-center text-gray-700 text-[10px] mt-10 uppercase tracking-widest">No Records</p>`; return; }
                 filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(item => {
-                    el.innerHTML += `
-                        <div class="dark-card p-4 border-l-2 border-${color}-500/50 mb-3" onclick="this.querySelector('.del').classList.toggle('hidden')">
-                            <div class="flex justify-between items-center"><span class="text-[9px] text-gray-500 font-bold">${item.date}</span><span class="font-black">$${item.amount.toLocaleString()}</span></div>
-                            <div class="text-sm text-gray-400 font-medium">${item.title}</div>
-                            <div class="del hidden pt-3 mt-3 border-t border-white/5"><button onclick="deleteData(${item.id}, '${table}')" class="text-[9px] text-red-500 bg-red-950/20 px-3 py-1.5 rounded-lg border border-red-500/20">DELETE</button></div>
-                        </div>`;
+                    el.innerHTML += `<div class="dark-card p-4 border-l-2 border-${color}-500 mb-3" onclick="this.querySelector('.del').classList.toggle('hidden')"><div class="flex justify-between items-center"><span class="text-[9px] text-gray-500 font-bold">${item.date}</span><span class="font-black">$${item.amount.toLocaleString()}</span></div><div class="text-sm text-gray-400 font-medium">${item.title}</div><div class="del hidden pt-3 mt-3 border-t border-white/5"><button onclick="deleteData(${item.id}, '${table}')" class="text-[9px] text-red-500 bg-red-950/20 px-3 py-1.5 rounded-lg border border-red-500/20 uppercase font-bold">Delete</button></div></div>`;
                 });
             };
             drawList('expenseList', db_local.expenses, 'expenses', 'red');
@@ -211,10 +178,9 @@
         function updateSummary() {
             const mExp = db_local.expenses.filter(i => getPeriod(i.date) === viewingMonth).reduce((s,i)=>s+i.amount, 0);
             const mInc = db_local.incomes.filter(i => getPeriod(i.date) === viewingMonth).reduce((s,i)=>s+i.amount, 0);
+            document.getElementById('balanceText').innerText = `$${(mInc-mExp).toLocaleString()}`;
             document.getElementById('totalExpText').innerText = `$${mExp.toLocaleString()}`;
             document.getElementById('totalIncText').innerText = `$${mInc.toLocaleString()}`;
-            document.getElementById('balanceText').innerText = `$${(mInc-mExp).toLocaleString()}`;
-            
             const ctx = document.getElementById('budgetChart').getContext('2d');
             if (chart) chart.destroy();
             chart = new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [mExp||0.1, mInc||0.1], backgroundColor: ['#b91c1c', '#15803d'], borderWidth: 0 }] }, options: { cutout: '88%' } });
@@ -228,10 +194,13 @@
         function changeMonth(val) { viewingMonth = val; selectedDate = null; renderAll(); }
         function resetDateFilter() { selectedDate = null; renderAll(); }
 
-        // 初始載入與預填
-        document.getElementById('expDate').value = todayStr;
-        document.getElementById('incDate').value = todayStr;
-        fetchAll();
+        // 頁面加載時執行
+        window.onload = () => {
+            document.getElementById('expDate').value = todayStr;
+            document.getElementById('incDate').value = todayStr;
+            renderAll(); // 先渲染一次空白畫面
+            fetchAll();  // 再去雲端抓資料
+        };
     </script>
 </body>
 </html>
